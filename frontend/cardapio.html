@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Cardápio</title>
+  <style>
+    .produto-card { border:1px solid #ccc; margin:10px; padding:10px; display:inline-block; vertical-align:top; width:220px;}
+    #carrinho { border:2px solid #333; padding:10px; margin:10px 0; }
+    #carrinho h3 { margin-top:0; }
+    .carrinho-item { margin-bottom:8px; }
+    .carrinho-btn { width:24px; height:24px; }
+    #btnIrPagamento { margin-top: 10px; padding: 8px 16px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <h2>Cardápio</h2>
+  <div id="cardapio"></div>
+  <div id="carrinho"></div>
+  <script>
+    let produtosDisponiveis = [];
+    // Carrinho salvo em localStorage para persistir enquanto o navegador estiver aberto
+    let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+
+    function salvarCarrinho() {
+      localStorage.setItem('carrinho', JSON.stringify(carrinho));
+    }
+
+    function renderCarrinho() {
+      const carrinhoDiv = document.getElementById('carrinho');
+      if (!carrinho.length) {
+        carrinhoDiv.innerHTML = '<h3>Carrinho</h3><p>Seu carrinho está vazio.</p>';
+        return;
+      }
+      let total = 0;
+      carrinhoDiv.innerHTML = '<h3>Carrinho</h3>' + carrinho.map(item => {
+        const subtotal = item.preco * item.qtd;
+        total += subtotal;
+        return `
+          <div class="carrinho-item">
+            <strong>${item.nome}</strong> - R$ ${item.preco.toFixed(2)} x 
+            <button class="carrinho-btn" onclick="alterarQtd(${item.id}, -1)">-</button>
+            <span>${item.qtd}</span>
+            <button class="carrinho-btn" onclick="alterarQtd(${item.id}, 1)">+</button>
+            = <strong>R$ ${subtotal.toFixed(2)}</strong>
+            <button class="carrinho-btn" onclick="removerDoCarrinho(${item.id})" title="Remover">🗑️</button>
+          </div>
+        `;
+      }).join('') + `<hr><strong>Total: R$ ${total.toFixed(2)}</strong>
+      <br><button id="btnIrPagamento" onclick="irParaPagamento()">Ir para pagamento</button>`;
+    }
+
+    function adicionarAoCarrinho(id) {
+      const produto = produtosDisponiveis.find(p => p.id === id);
+      if (!produto) return;
+      const item = carrinho.find(i => i.id === id);
+      if (item) {
+        item.qtd += 1;
+      } else {
+        carrinho.push({ id: produto.id, nome: produto.nome, preco: Number(produto.preco), qtd: 1 });
+      }
+      salvarCarrinho();
+      renderCarrinho();
+    }
+
+    function alterarQtd(id, delta) {
+      const item = carrinho.find(i => i.id === id);
+      if (!item) return;
+      item.qtd += delta;
+      if (item.qtd <= 0) {
+        carrinho = carrinho.filter(i => i.id !== id);
+      }
+      salvarCarrinho();
+      renderCarrinho();
+    }
+
+    function removerDoCarrinho(id) {
+      carrinho = carrinho.filter(i => i.id !== id);
+      salvarCarrinho();
+      renderCarrinho();
+    }
+
+    function irParaPagamento() {
+      // Redireciona para payment.html e passa os itens do carrinho via localStorage
+      salvarCarrinho(); // já salva, mas garante que está atualizado
+      window.location.href = "payment.html";
+    }
+
+    async function carregarCardapio() {
+      const cardapioDiv = document.getElementById('cardapio');
+      cardapioDiv.innerHTML = 'Carregando...';
+      try {
+        const response = await fetch('http://localhost:3003/produtos');
+        const produtos = await response.json();
+        // Filtra produtos marcados para cardápio E ativos
+        const cardapioProdutos = produtos.filter(p =>
+          (p.cardapio === true ||
+           p.cardapio === "true" ||
+           p.cardapio === "on" ||
+           p.cardapio === 1 ||
+           p.cardapio === "1") &&
+          (p.ativo === true ||
+           p.ativo === "true" ||
+           p.ativo === "on" ||
+           p.ativo === 1 ||
+           p.ativo === "1")
+        );
+        produtosDisponiveis = cardapioProdutos;
+        if (!cardapioProdutos.length) {
+          cardapioDiv.innerText = 'Nenhum produto no cardápio.';
+          return;
+        }
+        cardapioDiv.innerHTML = cardapioProdutos.map(produto => `
+          <div class="produto-card">
+            <strong>${produto.nome}</strong><br>
+            ${produto.descricao}<br>
+            Preço: R$ ${Number(produto.preco).toFixed(2)}<br>
+            ${produto.imagem ? `<img src="http://localhost:3003/files/${produto.imagem.split(/[\\/]/).pop()}" alt="Imagem" style="max-width:200px;">` : ''}
+            <br>
+            <button onclick="adicionarAoCarrinho(${produto.id})">Adicionar ao carrinho</button>
+          </div>
+        `).join('');
+      } catch (err) {
+        cardapioDiv.innerText = 'Erro ao buscar cardápio: ' + err;
+      }
+    }
+
+    // Torna funções globais para uso nos botões
+    window.adicionarAoCarrinho = adicionarAoCarrinho;
+    window.alterarQtd = alterarQtd;
+    window.removerDoCarrinho = removerDoCarrinho;
+    window.irParaPagamento = irParaPagamento;
+
+    carregarCardapio();
+    renderCarrinho();
+  </script>
+</body>
+</html>

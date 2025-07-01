@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Administração do Cardápio</title>
+</head>
+<body>
+  <h2>Selecionar Produtos do Cardápio</h2>
+  <div id="produtos"></div>
+  <script>
+    async function carregarProdutos() {
+      const produtosDiv = document.getElementById('produtos');
+      produtosDiv.innerHTML = 'Carregando...';
+      try {
+        const response = await fetch('http://localhost:3003/produtos');
+        const produtos = await response.json();
+        produtosDiv.innerHTML = produtos.map(produto => `
+          <div style="border:1px solid #ccc; margin:10px; padding:10px;">
+            <strong>${produto.nome}</strong><br>
+            ${produto.descricao}<br>
+            Preço: R$ ${produto.preco}<br>
+            ${produto.imagem ? `<img src="http://localhost:3003/files/${produto.imagem.split(/[\\/]/).pop()}" alt="Imagem" style="max-width:120px;">` : ''}
+            <br>
+            <button onclick="toggleCardapio(${produto.id}, ${produto.cardapio ? 'true' : 'false'})">
+              ${produto.cardapio ? 'Remover do Cardápio' : 'Adicionar ao Cardápio'} ${produto.cardapio ? '−' : '+'}
+            </button>
+          </div>
+        `).join('');
+      } catch (err) {
+        produtosDiv.innerText = 'Erro ao buscar produtos: ' + err;
+      }
+    }
+
+    async function toggleCardapio(id, estaNoCardapio) {
+      try {
+        const response = await fetch(`http://localhost:3003/produtos/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cardapio: !estaNoCardapio })
+        });
+        if (!response.ok) throw new Error('Erro ao atualizar produto');
+        carregarProdutos();
+      } catch (err) {
+        alert('Erro ao atualizar produto: ' + err);
+      }
+    }
+
+    window.toggleCardapio = toggleCardapio;
+    carregarProdutos();
+  </script>
+</body>
+</html>

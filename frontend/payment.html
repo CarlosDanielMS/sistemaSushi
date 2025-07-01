@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Pagamento</title>
+  <style>
+    .carrinho-item { margin-bottom:8px; }
+    .carrinho-btn { width:24px; height:24px; }
+    .form-section { margin: 20px 0; }
+    label { display: block; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h2>Pagamento</h2>
+  <div id="carrinho"></div>
+  <form id="pagamentoForm" class="form-section">
+    <label>
+      Endereço de entrega:
+      <input type="text" name="endereco" id="endereco" required placeholder="Rua, número, bairro, cidade">
+    </label>
+    <label>
+      Forma de pagamento:
+      <select name="formaPagamento" id="formaPagamento" required>
+        <option value="">Selecione</option>
+        <option value="dinheiro">Dinheiro</option>
+        <option value="cartao">Cartão</option>
+        <option value="pix">Pix</option>
+      </select>
+    </label>
+    <button type="submit" id="finalizarBtn">Finalizar Conta</button>
+  </form>
+  <button onclick="voltar()">Voltar ao Cardápio</button>
+  <script>
+    let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+
+    function renderCarrinho() {
+      const carrinhoDiv = document.getElementById('carrinho');
+      if (!carrinho.length) {
+        carrinhoDiv.innerHTML = '<p>Seu carrinho está vazio.</p>';
+        document.getElementById('pagamentoForm').style.display = 'none';
+        return;
+      }
+      document.getElementById('pagamentoForm').style.display = '';
+      let total = 0;
+      carrinhoDiv.innerHTML = carrinho.map(item => {
+        const subtotal = item.preco * item.qtd;
+        total += subtotal;
+        return `
+          <div class="carrinho-item">
+            <strong>${item.nome}</strong> - R$ ${item.preco.toFixed(2)} x ${item.qtd}
+            = <strong>R$ ${subtotal.toFixed(2)}</strong>
+          </div>
+        `;
+      }).join('') + `<hr><strong>Total: R$ ${total.toFixed(2)}</strong>`;
+    }
+
+    function voltar() {
+      window.location.href = "cardapio.html";
+    }
+
+    document.getElementById('pagamentoForm').onsubmit = function(e) {
+      e.preventDefault();
+      // Aqui você pode enviar os dados para o backend se desejar
+      // Simula o envio e vai para a página de status
+      localStorage.setItem('pedido', JSON.stringify({
+        carrinho,
+        endereco: document.getElementById('endereco').value,
+        formaPagamento: document.getElementById('formaPagamento').value
+      }));
+      // Limpa o carrinho
+      localStorage.removeItem('carrinho');
+      window.location.href = "status.html";
+    };
+
+    renderCarrinho();
+  </script>
+</body>
+</html>

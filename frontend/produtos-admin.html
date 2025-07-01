@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Administração de Produtos</title>
+  <style>
+    .hidden { display: none; }
+    .produto-card { border:1px solid #ccc; margin:10px; padding:10px; }
+    .produto-card img { max-width: 120px; display:block; }
+    .actions button { margin-right: 5px; }
+  </style>
+</head>
+<body>
+  <h2>Administração de Produtos</h2>
+  <button id="btnIncluir">Incluir Item</button>
+  <div id="formDiv" class="hidden">
+    <h3 id="formTitle">Novo Produto</h3>
+    <form id="produtoForm">
+      <input type="hidden" name="id" id="produtoId">
+      <input type="text" name="nome" id="nome" placeholder="Nome do produto" required><br>
+      <input type="text" name="descricao" id="descricao" placeholder="Descrição" required><br>
+      <input type="number" step="0.01" name="preco" id="preco" placeholder="Preço" required><br>
+      <input type="file" name="imagem" id="imagem"><br>
+      <label>
+        <input type="checkbox" name="ativo" id="ativo" checked> Ativo
+      </label>
+      <label>
+        <input type="checkbox" name="cardapio" id="cardapio"> Exibir no cardápio
+      </label>
+      <br>
+      <button type="submit" id="btnSalvar">Salvar</button>
+      <button type="button" id="btnCancelar">Cancelar</button>
+    </form>
+    <div id="formMsg"></div>
+  </div>
+  <br>
+  <button id="btnListar">Listar Produtos</button>
+  <div id="produtos"></div>
+  <script>
+    const formDiv = document.getElementById('formDiv');
+    const produtoForm = document.getElementById('produtoForm');
+    const produtosDiv = document.getElementById('produtos');
+    const btnIncluir = document.getElementById('btnIncluir');
+    const btnListar = document.getElementById('btnListar');
+    const btnCancelar = document.getElementById('btnCancelar');
+    const formMsg = document.getElementById('formMsg');
+    const formTitle = document.getElementById('formTitle');
+    let editandoId = null;
+
+    btnIncluir.onclick = () => {
+      formDiv.classList.remove('hidden');
+      produtoForm.reset();
+      document.getElementById('produtoId').value = '';
+      formTitle.innerText = 'Novo Produto';
+      editandoId = null;
+      formMsg.innerText = '';
+    };
+
+    btnCancelar.onclick = () => {
+      formDiv.classList.add('hidden');
+      produtoForm.reset();
+      editandoId = null;
+      formMsg.innerText = '';
+    };
+
+    produtoForm.onsubmit = async function(e) {
+      e.preventDefault();
+      formMsg.innerText = '';
+      const formData = new FormData(produtoForm);
+      let url = 'http://localhost:3003/produtos';
+      let method = 'POST';
+
+      if (editandoId) {
+        url += '/' + editandoId;
+        method = 'PUT';
+        if (!document.getElementById('imagem').files.length) {
+          formData.delete('imagem');
+        }
+      }
+
+      try {
+        let response;
+        if (method === 'POST') {
+          // Garante que o campo "ativo" seja enviado corretamente como booleano
+          if (!formData.has('ativo')) formData.append('ativo', false);
+          if (!formData.has('cardapio')) formData.append('cardapio', false);
+          response = await fetch(url, { method, body: formData });
+        } else {
+          // Para PUT, envia como JSON (exceto imagem)
+          const obj = {};
+          formData.forEach((v, k) => {
+            if (k !== 'imagem') obj[k] = v;
+          });
+          obj.ativo = formData.get('ativo') ? true : false;
+          obj.cardapio = formData.get('cardapio') ? true : false;
+          response = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(obj)
+          });
+        }
+        if (!response.ok) throw new Error(await response.text());
+        formMsg.innerText = 'Produto salvo com sucesso!';
+        formDiv.classList.add('hidden');
+        produtoForm.reset();
+        carregarProdutos();
+      } catch (err) {
+        formMsg.innerText = 'Erro: ' + err;
+      }
+    };
+
+    btnListar.onclick = carregarProdutos;
+
+    async function carregarProdutos() {
+      produtosDiv.innerHTML = 'Carregando...';
+      try {
+        const response = await fetch('http://localhost:3003/produtos');
+        const produtos = await response.json();
+        if (!Array.isArray(produtos)) {
+          produtosDiv.innerText = 'Erro ao buscar produtos: resposta inesperada da API';
+          return;
+        }
+        produtosDiv.innerHTML = produtos.map(produto => `
+          <div class="produto-card">
+            <strong>${produto.nome}</strong><br>
+            ${produto.descricao}<br>
+            Preço: R$ ${produto.preco}<br>
+            ${produto.imagem ? `<img src="http://localhost:3003/files/${produto.imagem.split(/[\\/]/).pop()}" alt="Imagem">` : ''}
+            <br>
+            Ativo: <input type="checkbox" ${produto.ativo ? 'checked' : ''} onchange="toggleAtivo(${produto.id}, this.checked)">
+            Cardápio: <input type="checkbox" ${produto.cardapio ? 'checked' : ''} onchange="toggleCardapio(${produto.id}, this.checked)">
+            <div class="actions">
+              <button onclick="editarProduto(${produto.id})">Editar</button>
+              <button onclick="excluirProduto(${produto.id})">Excluir</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        produtosDiv.innerText = 'Erro ao buscar produtos: ' + err;
+      }
+    }
+
+    window.toggleAtivo = async function(id, ativo) {
+      await fetch(`http://localhost:3003/produtos/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ativo })
+      });
+      carregarProdutos();
+    };
+
+    window.toggleCardapio = async function(id, cardapio) {
+      await fetch(`http://localhost:3003/produtos/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cardapio })
+      });
+      carregarProdutos();
+    };
+
+    window.excluirProduto = async function(id) {
+      if (!confirm('Tem certeza que deseja excluir este produto?')) return;
+      await fetch(`http://localhost:3003/produtos/${id}`, { method: 'DELETE' });
+      carregarProdutos();
+    };
+
+    window.editarProduto = async function(id) {
+      const response = await fetch(`http://localhost:3003/produtos/${id}`);
+      const produto = await response.json();
+      formDiv.classList.remove('hidden');
+      formTitle.innerText = 'Editar Produto';
+      document.getElementById('produtoId').value = produto.id;
+      document.getElementById('nome').value = produto.nome;
+      document.getElementById('descricao').value = produto.descricao;
+      document.getElementById('preco').value = produto.preco;
+      document.getElementById('ativo').checked = !!produto.ativo;
+      document.getElementById('cardapio').checked = !!produto.cardapio;
+      editandoId = produto.id;
+      formMsg.innerText = '';
+    };
+
+    // Carrega produtos ao abrir a página
+    carregarProdutos();
+  </script>
+</body>
+</html>

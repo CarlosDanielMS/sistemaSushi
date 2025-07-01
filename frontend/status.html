@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Status do Pedido</title>
+  <style>
+    .pedido-item { margin-bottom:8px; }
+  </style>
+</head>
+<body>
+  <h2>Status do Pedido</h2>
+  <div id="pedido"></div>
+  <button onclick="voltar()">Voltar ao Cardápio</button>
+  <script>
+    const pedido = JSON.parse(localStorage.getItem('pedido')) || {};
+    function renderPedido() {
+      const pedidoDiv = document.getElementById('pedido');
+      if (!pedido.carrinho || !pedido.carrinho.length) {
+        pedidoDiv.innerHTML = '<p>Nenhum pedido encontrado.</p>';
+        return;
+      }
+      let total = 0;
+      pedidoDiv.innerHTML = pedido.carrinho.map(item => {
+        const subtotal = item.preco * item.qtd;
+        total += subtotal;
+        return `
+          <div class="pedido-item">
+            <strong>${item.nome}</strong> - R$ ${item.preco.toFixed(2)} x ${item.qtd}
+            = <strong>R$ ${subtotal.toFixed(2)}</strong>
+          </div>
+        `;
+      }).join('') +
+      `<hr>
+      <strong>Total: R$ ${total.toFixed(2)}</strong><br>
+      <strong>Endereço:</strong> ${pedido.endereco}<br>
+      <strong>Forma de pagamento:</strong> ${pedido.formaPagamento}<br>
+      <p>Status: <b>Pedido recebido! Aguarde a confirmação.</b></p>`;
+    }
+    function voltar() {
+      localStorage.removeItem('pedido');
+      window.location.href = "cardapio.html";
+    }
+    renderPedido();
+  </script>
+</body>
+</html>
