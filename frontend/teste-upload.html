@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Teste Upload de Produto</title>
+</head>
+<body>
+  <h2>Upload de Produto com Imagem</h2>
+  <form id="produtoForm">
+    <input type="text" name="nome" placeholder="Nome do produto" required><br>
+    <input type="text" name="descricao" placeholder="Descrição" required><br>
+    <input type="number" step="0.01" name="preco" placeholder="Preço" required><br>
+    <input type="file" name="imagem" accept="image/*" required><br>
+    <input type="checkbox" name="cardapio" id="cardapio">
+    <label for="cardapio">Exibir no cardápio</label><br>
+    <button type="submit">Enviar</button>
+  </form>
+  <div id="resultado"></div>
+  <button type="button" id="buscarProdutos">Buscar Produtos</button>
+  <div id="produtos"></div>
+  <script>
+    document.getElementById('produtoForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+
+      try {
+        const response = await fetch('http://localhost:3003/produtos', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await response.json();
+        document.getElementById('resultado').innerText = JSON.stringify(data, null, 2);
+      } catch (err) {
+        document.getElementById('resultado').innerText = 'Erro ao enviar: ' + err;
+      }
+    });
+
+    document.getElementById('buscarProdutos').addEventListener('click', async function() {
+      const produtosDiv = document.getElementById('produtos');
+      produtosDiv.innerHTML = 'Carregando...';
+      try {
+        const response = await fetch('http://localhost:3003/produtos');
+        const produtos = await response.json();
+        if (!Array.isArray(produtos)) {
+          produtosDiv.innerText = 'Nenhum produto encontrado.';
+          return;
+        }
+        produtosDiv.innerHTML = produtos.map(produto => `
+          <div style="border:1px solid #ccc; margin:10px; padding:10px;">
+            <strong>${produto.nome}</strong><br>
+            ${produto.descricao}<br>
+            Preço: R$ ${produto.preco}<br>
+            ${produto.imagem ? `<img src="http://localhost:3003/files/${produto.imagem.split(/[\\/]/).pop()}" alt="Imagem" style="max-width:200px;">` : ''}
+          </div>
+        `).join('');
+      } catch (err) {
+        produtosDiv.innerText = 'Erro ao buscar produtos: ' + err;
+      }
+    });
+  </script>
+</body>
+</html>

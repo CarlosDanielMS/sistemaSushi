@@ -1,0 +1,134 @@
+.authContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* <-- muda aqui */
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  background-image: url('/background-sushi.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 2rem;
+}
+
+.authCard {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.authCard h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 1.5rem;
+  font-size: 1.8rem;
+}
+
+.authCard form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.authCard input {
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.authCard button[type="submit"] {
+  background: #4CAF50;
+  color: white;
+  padding: 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+.authCard p {
+  text-align: center;
+  margin-top: 1.5rem;
+  color: #666;
+}
+
+.authCard p button {
+  background: none;
+  border: none;
+  color: #4CAF50;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.subtitle {
+  color: #666;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.authForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.inputGroup {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.inputGroup input {
+  width: 100%;
+  max-width: 300px; /* Limita a largura para melhor visual */
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+.inputGroup input:focus {
+  border-color: #4CAF50;
+  outline: none;
+}
+
+.authButton {
+  background: #4CAF50;
+  color: white;
+  padding: 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.authButton:hover {
+  background: #45a049;
+}
+
+.switchAuth {
+  text-align: center;
+  margin-top: 1.5rem;
+  color: #666;
+}
+
+.switchButton {
+  background: none;
+  border: none;
+  color: #4CAF50;
+  cursor: pointer;
+  font-weight: bold;
+  padding: 0;
+  margin-left: 0.5rem;
+}
+
+.switchButton:hover {
+  text-decoration: underline;
+}

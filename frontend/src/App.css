@@ -1,0 +1,61 @@
+.app-container {
+  width: 100%;
+  min-height: 100vh;
+}
+
+nav {
+  background-color: #333;
+  padding: 1rem;
+  position: relative;
+}
+
+nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 auto; /* Centraliza a ul */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  max-width: 1200px; /* Limita a largura máxima */
+  position: relative; /* Para posicionamento do último item */
+}
+
+nav li {
+  display: flex;
+  align-items: center;
+}
+
+nav a, nav button {
+  color: white;
+  text-decoration: none;
+  font-size: 1.1rem;
+  white-space: nowrap; /* Evita quebra de texto */
+}
+
+nav a:hover {
+  color: #4CAF50;
+}
+
+/* Ajuste do UserMenu */
+nav li:last-child {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Media query para telas menores */
+@media (max-width: 768px) {
+  nav ul {
+    padding: 0 1rem;
+    justify-content: flex-start;
+    overflow-x: auto; /* Permite rolar horizontalmente se necessário */
+  }
+
+  nav li:last-child {
+    position: relative;
+    transform: none;
+    margin-left: 1rem;
+  }
+}
